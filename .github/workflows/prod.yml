@@ -316,7 +316,7 @@ jobs:
   
   
   second_notification:
-    name: Deploy Dev
+    name: Deploy
     if: github.event_name == 'push'
     needs: build_dev
     uses: RainbowGravity/golang-app/.github/workflows/notifications.yml@main
