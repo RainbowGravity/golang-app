@@ -42,8 +42,8 @@ jobs:
     if: github.event_name != 'push'
     uses: RainbowGravity/golang-app/.github/workflows/notifications.yml@main
     with: 
-      message: "*${{ github.actor }}* created a pull request #${{github.event.number}} in *${{ github.workflow }}*. Code is testing now.\n\n[Link to the PR](https://github.com/${{ github.repository }}/pull/${{github.event.number}})\n\n[Link to the action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      body: "${{ github.actor }} created a pull request #${{github.event.number}} in *${{ github.workflow }}*. Code is testing now.'${{ github.event.inputs.reason }}'.\n\nhttps://github.com/${{ github.repository }}/pull/${{github.event.number}}\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      message: "*${{ github.actor }}* created a pull request #${{github.event.number}} in *${{ github.workflow }}*. Code is testing now and Terraform plan is running.\n\n[Link to the PR](https://github.com/${{ github.repository }}/pull/${{github.event.number}})\n\n[Link to the action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+      body: "${{ github.actor }} created a pull request #${{github.event.number}} in *${{ github.workflow }}*. Code is testing now and Terraform plan is running.'${{ github.event.inputs.reason }}'.\n\nhttps://github.com/${{ github.repository }}/pull/${{github.event.number}}\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       subject: Notification about pull request in ${{ github.workflow }}
     secrets: 
       token: ${{ secrets.TELEGRAM_TOKEN }}
@@ -245,9 +245,6 @@ jobs:
   terraform_plan:
     name: Terraform Plan
     if: github.event_name != 'push'
-    needs: 
-    - tests
-    - build_dev
     runs-on: ubuntu-latest
     defaults:
       run:
