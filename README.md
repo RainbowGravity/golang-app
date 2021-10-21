@@ -31,6 +31,6 @@ My workflow works like this:
 <p align=center><b>Workflow diagram</b></p>
 <p align=center>
 
-  <img width="1000" height="447" src="https://user-images.githubusercontent.com/89798605/138294880-c891d5e3-a818-42e7-9956-96b3c401a712.png">
+  <img width="800" height="357" src="https://user-images.githubusercontent.com/89798605/138294880-c891d5e3-a818-42e7-9956-96b3c401a712.png">
 
 </p>
