@@ -10,7 +10,7 @@ More interesting thing is a Github flow workflow created for deployment of this 
 
 Github flow is the simple trunk-based workflow which is consists of one main branch and several feature branches. Every developer is workin in his own feature branch. Developer commiting in his own branch with new versions of feature with reasonable commit messages. Commit messages allows to check development history and roll back the changes if critical issue was found. 
 
-After feature is complete developer creating a pull request for merging his branch into main. After the pull request is created code reviewing and conversations are started. Developer is in process of updating and improvement his code. If everyone is desided that code is complete, then pull request is applied and feature branch is deleted. 
+After feature is complete developer creating a pull request for merging his branch into main. After the pull request is opened code reviewing and conversations are started. Developer is in process of updating and improvement of his code. If everyone is desided that code is complete, then pull request is applied and feature branch is deleted. 
 
 Code is in CD stage now. It will be delivered to the test environment, then to the staging and production. Very simple development process. 
 
