@@ -28,8 +28,8 @@ jobs:
     if: github.event_name == 'push'
     uses: RainbowGravity/golang-app/.github/workflows/notifications.yml@main
     with: 
-      message: "*${{ github.actor }}* pushed code to the *${{ github.workflow }}*. Code is building for Development env deployment.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      body: "${{ github.actor }} pushed code to the ${{ github.workflow }}. Code is building for Development env deployment.'${{ github.event.inputs.reason }}'.\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+      message: "*${{ github.actor }}* pushed code to the *${{ github.workflow }}*. Code is building for Staging env deployment.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+      body: "${{ github.actor }} pushed code to the ${{ github.workflow }}. Code is building for Staging env deployment.'${{ github.event.inputs.reason }}'.\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
       subject: Notification about push to ${{ github.workflow }}
     secrets: 
       token: ${{ secrets.TELEGRAM_TOKEN }}
@@ -158,88 +158,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
 
-# ============================================================================== BUILD DEV ==============================================================================
-
-
-  build_dev:
-    name: Build Dev
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        if: github.event_name == 'push'
-        uses: actions/checkout@v2
-        with: 
-          repository: RainbowGravity/infrastructure
-      - name: Configure AWS credentials
-        if: github.event_name == 'push'
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
-      - name: Login to Amazon ECR
-        if: github.event_name == 'push'
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Create amazon ECR Repository
-        id: ecr
-        if: github.event_name == 'push'
-        uses: int128/create-ecr-repository-action@v1
-        with:
-          repository: ${{ env.DEV_REPOSITORY }}
-          lifecycle-policy: Policy/dev_policy.json
-      - name: Checkout
-        uses: actions/checkout@v2
-      - name: Build and push image to Amazon ECR
-        if: github.event_name == 'push'
-        id: build-image
-        run: |
-          docker build ./golang-app -t ${{ steps.ecr.outputs.repository-uri }}:${{ env.IMAGE_TAG }}
-          docker push ${{ steps.ecr.outputs.repository-uri }}:${{ env.IMAGE_TAG }}
-      - name: Test of the image building
-        if: github.event_name != 'push'
-        run: docker build ./golang-app -t dev-test-image:${{ env.IMAGE_TAG }}
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ BUILD NOTIFICATIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      - name: Create Telegram notification
-        if: always()
-        uses: haya14busa/action-cond@v1
-        id: telegram
-        with:
-          cond: ${{ job.status == 'failure' }}
-          if_true:  "*${{ github.actor }}*'s *${{ github.workflow }}* code build has *${{ job.status }}*\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-          if_false: "*${{ github.actor }}*'s *${{ github.workflow }}* code was built and pushed to ${{ env.DEV_REPOSITORY }} ECR repository and deploying to *Development env*.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      - name: Create Gmail notification
-        if: always()
-        uses: haya14busa/action-cond@v1
-        id: mail
-        with:
-          cond: ${{ job.status == 'failure' }}
-          if_true:  "${{ github.actor }}'s ${{ github.workflow }} code build has ${{ job.status }}.\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          if_false: "${{ github.actor }}'s ${{ github.workflow }} code was built and pushed to ${{ env.DEV_REPOSITORY }} ECR repository and deploying to Development env.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      - name: Blau Telegram notification
-        if: always()
-        uses: appleboy/telegram-action@master
-        with: 
-         to: ${{ secrets.TELEGRAM_TO }}
-         token: ${{ secrets.TELEGRAM_TOKEN }}
-         args: "${{ steps.telegram.outputs.value }} "
-         format: "markdown"
-         disable_web_page_preview: true
-      - name: Blau Gmail notification
-        if: always()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          server_address: smtp.gmail.com
-          server_port: 465
-          subject: Notification about merge to ${{ github.workflow }}
-          to: ${{ secrets.MAIL_USERNAME }}
-          from: "Exam homework notifications"
-          secure: true
-          body: "${{ steps.mail.outputs.value }} "
-
-# ============================================================================== DEV PLAN ============================================================================== 
+# ============================================================================== GREEN PLAN ============================================================================== 
 
 
   terraform_plan:
@@ -248,7 +167,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: Cluster/AWS/ECS_Dev
+        working-directory: Cluster/AWS/ECS_Green
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -309,78 +228,11 @@ jobs:
 
 
 
-# ============================================================================== DEV DEPLOYMENT  ==============================================================================
-
-  
-  deploy_dev:
-    name: Deploy Dev
-    if: github.event_name == 'push'
-    needs: build_dev
-    environment:
-      name: development
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: Cluster/AWS/ECS_Dev
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-           repository: RainbowGravity/infrastructure
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-           aws-region: ${{ secrets.AWS_REGION }}
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - name: Get the name of the ECR repository
-        id: ecr
-        uses: int128/create-ecr-repository-action@v1
-        with:
-          repository: ${{ env.DEV_REPOSITORY }}
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1
-      - name: Terraform Init
-        id: init
-        run: terraform init
-      - name: Terraform Apply
-        id: apply
-        run: terraform apply -var="Dev_Container=${{ steps.ecr.outputs.repository-uri }}:${{ env.IMAGE_TAG }}" -auto-approve
-# +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ DEVELOPMENT DEPLOY NOTIFICATIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      - name: Send Telegram notification
-        if: always()
-        uses: appleboy/telegram-action@master
-        with: 
-          to: ${{ secrets.TELEGRAM_TO }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          args: "${{ github.job }} job of *${{ github.repository }}* has *${{ job.status }}*\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" 
-          format: "markdown"
-          disable_web_page_preview: true
-      - name: Send Gmail notification
-        if: always()
-        uses: dawidd6/action-send-mail@v3
-        with:
-          username: ${{ secrets.MAIL_USERNAME }}
-          password: ${{ secrets.MAIL_PASSWORD }}
-          server_address: smtp.gmail.com
-          server_port: 465
-          subject: ${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}
-          to: ${{ secrets.MAIL_USERNAME }}
-          from: "Exam homework notifications"
-          secure: true
-          body: "${{ github.job }} job of ${{ github.repository }} has ${{ job.status }}\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}" 
- 
-
-
 # ============================================================================== STAGING BUILD ==============================================================================  
 
 
   build_gruen:
     name: Build Gruen
-    needs: deploy_dev
     runs-on: ubuntu-latest
     if: github.event_name == 'push'
     steps:
@@ -418,7 +270,7 @@ jobs:
         with:
           cond: ${{ job.status == 'failure' }}
           if_true:  "*${{ github.actor }}*'s *Staging env* code build has *${{ job.status }}*\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-          if_false: "*${{ github.actor }}*'s *Staging env* code was built and pushed to ${{ env.GRUEN_REPOSITORY }} ECR repository. Waiting for your approval for *Staging env* deployment.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          if_false: "*${{ github.actor }}*'s *Staging env* code was built and pushed to ${{ env.GRUEN_REPOSITORY }} ECR repository and deploying to Staging env.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
       - name: Create Gmail notification
         if: always()
         uses: haya14busa/action-cond@v1
@@ -426,7 +278,7 @@ jobs:
         with:
           cond: ${{ job.status == 'failure' }}
           if_true:  "${{ github.actor }}'s Staging env code build has ${{ job.status }}.\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          if_false: "${{ github.actor }}'s Staging env code was built and pushed to ${{ env.GRUEN_REPOSITORY }} ECR repository. Waiting for your approval for Staging env deployment.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
+          if_false: "${{ github.actor }}'s Staging env code was built and pushed to ${{ env.GRUEN_REPOSITORY }} ECR repository and deploying to Staging env.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
       - name: Blau Telegram notification
         if: always()
         uses: appleboy/telegram-action@master
