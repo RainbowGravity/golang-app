@@ -310,22 +310,7 @@ jobs:
 
 
 # ============================================================================== DEV DEPLOYMENT  ==============================================================================
-  
-  
-  second_notification:
-    name: Deploy
-    if: github.event_name == 'push'
-    needs: build_dev
-    uses: RainbowGravity/golang-app/.github/workflows/notifications.yml@main
-    with: 
-      message: "*${{ github.actor }}* pushed code to the *${{ github.workflow }}*. Code was built for *${{ github.workflow }}* deployment and waiting for your review.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      body: "${{ github.actor }} pushed code to the ${{ github.workflow }}. Code is building right now for ${{ github.workflow }} deployment and waiting for your review.'${{ github.event.inputs.reason }}'.\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-      subject: Notification about push to ${{ github.workflow }}
-    secrets: 
-      token: ${{ secrets.TELEGRAM_TOKEN }}
-      to: ${{ secrets.TELEGRAM_TO }}
-      mail_username: ${{ secrets.MAIL_USERNAME }}
-      mail_password: ${{ secrets.MAIL_PASSWORD }}
+
   
   deploy_dev:
     name: Deploy Dev
