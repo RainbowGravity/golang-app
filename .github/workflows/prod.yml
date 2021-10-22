@@ -170,32 +170,16 @@ jobs:
         if: github.event_name != 'push'
         run: docker build ./golang-app -t dev-test-image:${{ env.IMAGE_TAG }}
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ BUILD NOTIFICATIONS +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-      - name: Create Telegram notification
-        if: always()
-        uses: haya14busa/action-cond@v1
-        id: telegram
-        with:
-          cond: ${{ job.status == 'failure' }}
-          if_true:  "*${{ github.actor }}*'s *${{ github.workflow }}* code build has *${{ job.status }}*\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-          if_false: "*${{ github.actor }}*'s *${{ github.workflow }}* code was built and pushed to ${{ env.DEV_REPOSITORY }} ECR repository and deploying to *Development env*.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      - name: Create Gmail notification
-        if: always()
-        uses: haya14busa/action-cond@v1
-        id: mail
-        with:
-          cond: ${{ job.status == 'failure' }}
-          if_true:  "${{ github.actor }}'s ${{ github.workflow }} code build has ${{ job.status }}.\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          if_false: "${{ github.actor }}'s ${{ github.workflow }} code was built and pushed to ${{ env.DEV_REPOSITORY }} ECR repository and deploying to Development env.\n\n[Link to the action.](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
-      - name: Blau Telegram notification
+      - name: Telegram notification
         if: always()
         uses: appleboy/telegram-action@master
         with: 
          to: ${{ secrets.TELEGRAM_TO }}
          token: ${{ secrets.TELEGRAM_TOKEN }}
-         args: "${{ steps.telegram.outputs.value }} "
+         args: "*${{ github.actor }}*'s *${{ github.workflow }}* code build test for pull request #${{github.event.number}} has *${{ job.status }}*\n\n[Link to the PR](https://github.com/${{ github.repository }}/pull/${{github.event.number}})\n\n[Link to the action](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})"
          format: "markdown"
          disable_web_page_preview: true
-      - name: Blau Gmail notification
+      - name: Gmail notification
         if: always()
         uses: dawidd6/action-send-mail@v3
         with:
@@ -203,7 +187,7 @@ jobs:
           password: ${{ secrets.MAIL_PASSWORD }}
           server_address: smtp.gmail.com
           server_port: 465
-          subject: Notification about merge to ${{ github.workflow }}
+          subject: "${{ github.actor }}'s ${{ github.workflow }} code build test for pull request #${{github.event.number}} has ${{ job.status }}\n\nhttps://github.com/${{ github.repository }}/pull/${{github.event.number}}\n\nhttps://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           to: ${{ secrets.MAIL_USERNAME }}
           from: "Exam homework notifications"
           secure: true
