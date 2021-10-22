@@ -55,7 +55,7 @@ jobs:
       - notification
       - approve
     strategy:
-      max-parallel: 1
+      max-parallel: 3
       matrix:
         terraform_working_dir: [Cluster/AWS/ECS_Dev, Cluster/AWS/ECS_Green, Cluster/AWS/ECS_Blue, Cluster/AWS/Instances, Cluster/AWS/VPC]
     defaults:
